@@ -1,0 +1,57 @@
+#include <ESP8266WiFi.h>
+#include <ThingSpeak.h>
+
+const char *ssid = "ssid";
+const char *pass = "password";
+
+long channelID = 3002898;
+const char writeAPIkey[] = "2HGNVK4F8PISMYM5";
+
+WiFiClient client;
+
+#define sensor A0     // Analog pin for smoke sensor
+#define led D0        // Built-in LED (GPIO16 on NodeMCU)
+
+const int threshold = 50;
+
+void setup() {
+  Serial.begin(9600);
+  pinMode(led, OUTPUT);
+
+  WiFi.begin(ssid, pass);
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(200);
+    Serial.print(".");
+  }
+
+  Serial.println();
+  Serial.println("NodeMCU is connected!");
+  Serial.println(WiFi.localIP());
+
+  ThingSpeak.begin(client);
+}
+
+void smokelevel() {
+  int value = analogRead(sensor);
+  value = map(value, 0, 1024, 0, 100); // Map to 0–100 scale
+
+  Serial.println("Pressure level: " + String(value));
+  ThingSpeak.writeField(channelID, 1, value, writeAPIkey);
+
+  if (value >= threshold) {
+    digitalWrite(led, HIGH);
+    Serial.println("Smoke is detected");
+  } else {
+    digitalWrite(led, LOW);
+    Serial.println("Smoke is not detected");
+  }
+
+  int light = digitalRead(led);
+  delay(15000);  // Wait 15 seconds before next write
+  ThingSpeak.writeField(channelID, 2, light, writeAPIkey);
+}
+
+void loop() {
+  smokelevel();
+  delay(15000); // Total 30s delay (15s between writes)
+}
