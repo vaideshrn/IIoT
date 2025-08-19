@@ -1,0 +1,47 @@
+#include <ESP8266WiFi.h>
+#include <ThingSpeak.h>
+const char *ssid = "TEJAVAIDESH6358";
+const char *pass = "F89v56}8";
+long channelID = 3040014;
+const char writeAPIkey[] ="3EYVCDP5WOOFTMRL";
+WiFiClient client;
+#define sensor A0 //A0 pin nodemcu
+const int threshold=50;
+#define led D2
+void setup()
+{
+ Serial.begin(9600);
+ WiFi.begin(ssid, pass);
+ while(WiFi.status() != WL_CONNECTED)
+ {
+ delay(200);
+ Serial.print(".");
+ }
+ Serial.println();
+ Serial.println("NodeMCU is connected!");
+ Serial.println(WiFi.localIP());
+ ThingSpeak.begin(client);
+}
+void rainlevel() {
+int value = analogRead(sensor);
+value = map(value, 0, 1024, 0, 100); //Get the soil moisture values
+ ThingSpeak.writeField(channelID, 1, value, writeAPIkey);
+ Serial.println("rain level:" + (String) value);
+ if(value<=threshold)
+ {
+ digitalWrite(led,HIGH);
+ Serial.println("rain is detected");
+ }
+ else
+ {
+ digitalWrite(led,LOW);
+ Serial.println("rain is not detected");
+ }
+ int light=digitalRead(led);
+ ThingSpeak.writeField(channelID, 2, light, writeAPIkey);
+}
+void loop()
+{
+rainlevel();
+delay (2000);
+}
