@@ -1,0 +1,29 @@
+#include <ESP8266WiFi.h>
+#include <ThingSpeak.h>
+#include <Ultrasonic.h>
+const int trigPin = D3; // Trigger pin of ultrasonic sensor
+const int echoPin = D4; // Echo pin of ultrasonic sensor
+const char *ssid = "TEJAVAIDESH6358"; //enter the wifi name
+const char *password = "F89v56}8";// enter the wifi password
+const char *apiKey = "BUJDXN5EE4MYWJR2";// paste teh API key in the thingspeak cloud
+Ultrasonic ultrasonic(trigPin, echoPin);
+WiFiClient client;
+void setup() {
+ Serial.begin(115200);
+ pinMode(trigPin, OUTPUT);
+ pinMode(echoPin, INPUT);
+ WiFi.begin(ssid, password);
+ while (WiFi.status() != WL_CONNECTED) {
+ delay(100);
+ Serial.println("Connecting to WiFi..."); }
+ Serial.println("Connected to WiFi");
+ ThingSpeak.begin(client);
+}
+void loop() {
+ int distance = ultrasonic.read(CM); //read the ultrasonic data in CM
+ Serial.print("Distance: ");
+ Serial.print(distance);
+ Serial.println(" cm");
+ ThingSpeak.writeField( 3002025, 1, distance, apiKey);
+ delay(500);
+}
